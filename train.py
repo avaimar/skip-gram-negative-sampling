@@ -7,6 +7,12 @@ def get_args():
     parser = argparse.ArgumentParser(description="PyTorch LDA2Vec Training")
 
     """
+    WandB
+    
+    """
+    parser.add_argument('--run-id', type=str, help='Run name/ID on W&B')
+
+    """
     Data handling
     """
     parser.add_argument('--dataset-dir', type=str, default='data/',
@@ -30,7 +36,7 @@ def get_args():
     """
     parser.add_argument('--epochs', type=int, default=15, metavar='N',
                         help='number of epochs to train for - iterations over the dataset (default: 15)')
-    parser.add_argument('--batch-size', type=int, default=1024,
+    parser.add_argument('--batch-size', type=int, default=2,
                         metavar='N', help='number of examples in a training batch (default: 1024)')
     parser.add_argument('--lr', type=float, default=1e-3, metavar='LR',
                         help='learning rate (default: 1e-3)')

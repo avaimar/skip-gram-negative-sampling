@@ -7,8 +7,9 @@ from model import SkipGramEmbeddings
 from sgns_loss import SGNSLoss
 from tqdm import tqdm
 from datasets.pypi_lang import PyPILangDataset
-from datasets.world_order import WorldOrderDataset
+from datasets.COHA import COHADataset
 from torch.utils.tensorboard import SummaryWriter
+import wandb
 
 
 class Trainer:
@@ -18,7 +19,8 @@ class Trainer:
         self.args = args
         self.writer = SummaryWriter(log_dir='./experiments/', flush_secs=3)
         #self.dataset = PyPILangDataset(args, examples_path='data/pypi_examples.pth', dict_path='data/pypi_dict.pth')
-        self.dataset = WorldOrderDataset(args)
+        #self.dataset = COHADataset(args)
+        self.dataset = COHADataset(args, examples_path='data/training_examples_2000s.pth', dict_path='data/dictionary_2000s.pth')
         self.vocab_size = len(self.dataset.dictionary)
         print("Finished loading dataset")
 
@@ -27,7 +29,15 @@ class Trainer:
 
         self.model = SkipGramEmbeddings(self.vocab_size, args.embedding_len).to(args.device)
         self.optim = optim.Adam(self.model.parameters(), lr=args.lr)
-        self.sgns = SGNSLoss(self.dataset, self.model.word_embeds, self.args.device)
+        self.sgns = SGNSLoss(self.dataset, self.model.context_embeds, self.args.device)
+
+        wandb.init(
+            project='bbb-uncertainty',
+            config=args,
+            name=args.run_id,
+            id=args.run_id
+        )
+        wandb.watch(self.model, log="all")
 
         # Add graph to tensorboard
         #self.writer.add_graph(self.model, iter(self.dataloader).next()[0])
@@ -39,6 +49,8 @@ class Trainer:
         print('\nRandom embeddings:')
         for word in self.dataset.queries:
             print(f'word: {word} neighbors: {self.model.nearest_neighbors(word, self.dataset.dictionary)}')
+
+        losses = []
 
         for epoch in range(self.args.epochs):
 
@@ -74,14 +86,23 @@ class Trainer:
                 #if global_step % self.args.log_step == 0:
                 #    norm = (i + 1) * num_examples
                 #    self.log_step(epoch, global_step, running_loss/norm, center, context)
+                wandb.log({"Step loss": loss.item(), 'Epoch': epoch, 'step': i})
 
+            # Epoch average loss
             norm = (i + 1) * num_examples
-            #self.log_and_save_epoch(epoch, running_loss / norm)
+            ave_loss = running_loss / norm
+
+            if epoch == 0 or (len(losses) > 0 and ave_loss < min(losses)):
+                self.log_and_save_epoch(epoch, ave_loss)
+                wandb.run.summary['best_loss'] = ave_loss
             self.log_step(epoch, global_step, running_loss / norm)#, testing_loss / norm)
+            losses.append(ave_loss)
+            wandb.log({"Epoch loss": ave_loss, 'Epoch': epoch})
 
             print('\nGRAD:', np.sum(self.model.word_embeds.weight.grad.clone().detach().numpy()))
 
         self.writer.close()
+        wandb.finish()
 
     def log_and_save_epoch(self, epoch, loss):
         # Visualize document embeddings
@@ -95,8 +116,8 @@ class Trainer:
         print(f'Beginning to save checkpoint')
         torch.save({
             'epoch': epoch + 1,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optim.state_dict(),
+            'state_dict': self.model.state_dict(),
+            'optimizer': self.optim.state_dict(),
             'loss': loss,
         }, f'epoch_{epoch}_ckpt.pth')
         print(f'Finished saving checkpoint')

@@ -10,8 +10,8 @@ class Tokenizer:
         # Define pipeline - use different nlp is using pretrained
         self.nlp = spacy.load("en_core_web_sm", disable=[])
         # Merge named entities
-        merge_ents = self.nlp.create_pipe("merge_entities")
-        self.nlp.add_pipe(merge_ents)
+        #merge_ents = self.nlp.create_pipe("merge_entities")
+        self.nlp.add_pipe('merge_entities')
 
     def tokenize_doc(self, doc_str):
         """
