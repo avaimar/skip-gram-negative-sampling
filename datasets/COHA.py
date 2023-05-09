@@ -10,7 +10,7 @@ class COHADataset(SkipGramDataset):
     def __init__(self, args, examples_path=None, dict_path=None):
         SkipGramDataset.__init__(self, args)
         self.name = 'COHA'
-        self.queries = ['man', 'woman', 'doctor', 'nurse', 'asian', 'white']
+        self.queries = ['asian']
         self.dataset_dir = args.dataset_dir
 
         if examples_path is not None and dict_path is not None:
@@ -24,7 +24,7 @@ class COHADataset(SkipGramDataset):
             self.generate_examples_serial()
             # Save dataset files - this tokenization and example generation can take awhile with a lot of data
             print('Saving example and dictionary files')
-            self.save('training_examples.pth', 'dictionary.pth')
+            self.save('data/training_examples.pth', 'data/dictionary.pth')
 
         print(f'There are {len(self.dictionary)} tokens and {len(self.examples)} examples.')
 
@@ -39,7 +39,7 @@ class COHADataset(SkipGramDataset):
         tokenized_data = []
         files = glob(os.path.join(self.dataset_dir, "**/*.txt"))
         # Start with just 2000s files
-        files = glob(os.path.join(self.dataset_dir, "2000s/*.txt"))
+        files = glob(os.path.join(self.dataset_dir, "1820s/*.txt"))
         for file in tqdm(files):
             with open(file, 'r') as f:
                 text = f.read()

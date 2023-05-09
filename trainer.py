@@ -18,9 +18,8 @@ class Trainer:
         # Load data
         self.args = args
         self.writer = SummaryWriter(log_dir='./experiments/', flush_secs=3)
-        #self.dataset = PyPILangDataset(args, examples_path='data/pypi_examples.pth', dict_path='data/pypi_dict.pth')
         #self.dataset = COHADataset(args)
-        self.dataset = COHADataset(args, examples_path='data/training_examples_2000s.pth', dict_path='data/dictionary_2000s.pth')
+        self.dataset = COHADataset(args, examples_path='data/training_examples_1820s.pth', dict_path='data/dictionary_1820s.pth')
         self.vocab_size = len(self.dataset.dictionary)
         print("Finished loading dataset")
 
@@ -58,7 +57,7 @@ class Trainer:
             running_loss = 0.0 #testing_loss = 0.0, 0.0
             global_step = epoch * len(self.dataloader)
             num_examples = 0
-
+            #print(k)
             for i, data in enumerate(tqdm(self.dataloader)):
                 # Unpack data
                 center, context = data
