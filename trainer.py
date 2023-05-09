@@ -102,7 +102,7 @@ class Trainer:
             losses.append(ave_loss)
             wandb.log({"Epoch loss": ave_loss, 'Epoch': epoch})
 
-            print('\nGRAD:', np.sum(self.model.word_embeds.weight.grad.clone().detach().numpy()))
+            #print('\nGRAD:', np.sum(self.model.word_embeds.weight.grad.clone().detach().numpy()))
 
         self.writer.close()
         wandb.finish()
@@ -119,6 +119,7 @@ class Trainer:
         print(f'Beginning to save checkpoint')
         torch.save({
             'epoch': epoch + 1,
+            'args': self.args,
             'state_dict': self.model.state_dict(),
             'optimizer': self.optim.state_dict(),
             'loss': loss,
