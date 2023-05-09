@@ -10,6 +10,7 @@ from datasets.pypi_lang import PyPILangDataset
 from datasets.COHA import COHADataset
 from torch.utils.tensorboard import SummaryWriter
 import wandb
+import os
 
 
 class Trainer:
@@ -17,9 +18,12 @@ class Trainer:
     def __init__(self, args):
         # Load data
         self.args = args
-        self.writer = SummaryWriter(log_dir='./experiments/', flush_secs=3)
+        self.writer = SummaryWriter(log_dir=os.path.join(args.base_dir, 'experiments/'), flush_secs=3)
         #self.dataset = COHADataset(args)
-        self.dataset = COHADataset(args, examples_path='data/training_examples_1820s.pth', dict_path='data/dictionary_1820s.pth')
+        self.dataset = COHADataset(
+            args,
+            examples_path=os.path.join(args.base_dir, f'data/training_examples_{args.decade}.pth'),
+            dict_path=os.path.join(args.base_dir, f'data/dictionary_{args.decade}.pth'))
         self.vocab_size = len(self.dataset.dictionary)
         print("Finished loading dataset")
 
@@ -118,7 +122,7 @@ class Trainer:
             'state_dict': self.model.state_dict(),
             'optimizer': self.optim.state_dict(),
             'loss': loss,
-        }, f'epoch_{epoch}_ckpt.pth')
+        }, os.path.join(self.args.base_dir, 'results', f'model_best_SGNSCOHA_{self.args.run_id}.pth'))
         print(f'Finished saving checkpoint')
 
     def log_step(self, epoch, global_step, loss):
